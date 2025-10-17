@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GCAT Airdrop</title>
+    <link rel="icon" type="image/png" href="https://www.woofswap.finance/image/tokens/gcat.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0068FF',
+                        secondary: '#18E5A0',
+                        accent: '#FFD700',
+                        dark: '#070808',
+                        'light-gray': '#E5E7EB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Changa One', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow-glow {
+                text-shadow: 0 0 10px rgba(0, 104, 255, 0.5);
+            }
+            .glow-border {
+                box-shadow: 0 0 12px rgba(24, 229, 160, 0.3);
+            }
+            .bg-grid {
+                background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="1" cy="1" r="1" fill="%230068FF" fill-opacity="0.1"/%3E%3C/svg%3E');
+                background-size: 20px 20px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Changa+One&display=swap" rel="stylesheet">
+</head>
+<body class="bg-dark text-white font-sans overflow-x-hidden">
+    <header class="fixed w-full z-50 bg-dark/90 backdrop-blur-md transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer hover:text-primary transition-colors">
+                <div class="w-10 h-10 rounded-full overflow-hidden">
+                    <img src="https://www.woofswap.finance/image/tokens/gcat.png" alt="GCAT Logo" class="w-full h-full object-cover">
+                </div>
+                <span class="font-display text-3xl text-primary text-shadow-glow">GCAT Airdrop</span>
+            </div>
+            <button id="menuToggle" class="md:hidden text-2xl text-primary">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="md:hidden bg-dark/95 absolute w-full top-full py-4 px-4 hidden">
+            <div class="flex flex-col space-y-4">
+                <a href="#airdrop" class="hover:text-primary transition-colors py-2 text-white">Airdrop</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="airdrop" class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-dark pointer-events-none"></div>
+        <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <div class="w-48 h-48 mx-auto mb-8 animate-float">
+                <img src="https://www.woofswap.finance/image/tokens/gcat.png" alt="GCAT Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
+            </div>
+            <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GCAT Airdrop</h1>
+            <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
+                Lock GCAT tokens to claim GCATnew rewards.
+            </p>
+            <div class="bg-dark/50 p-6 rounded-lg border border-primary/30 max-w-md mx-auto mb-8">
+                <div class="flex flex-col space-y-4">
+                    <button id="connectWalletButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">Connect Wallet</button>
+                    <p id="networkStatus" class="text-light-gray text-sm">Click to connect wallet...</p>
+                    <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <i class="fa fa-link text-accent mr-3"></i>
+                        <span class="font-mono text-sm text-white truncate">0x823715e38b575D7152E86Dd6DaC7c55099014b01</span>
+                        <button class="ml-3 text-light-gray hover:text-secondary transition-colors" onclick="copyContract()">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <p id="balanceStatus" class="text-light-gray text-sm">GT Balance: 0<br>GCAT Balance: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed</p>
+                    </div>
+                    <div id="ownerSection" class="hidden">
+                        <label class="block text-left text-light-gray mb-2">Deposit GCATnew Amount</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="depositAmount" placeholder="Enter GCATnew amount" class="flex-1 px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                            <button id="maxDepositButton" class="px-4 py-2 bg-secondary text-dark rounded-lg font-medium hover:bg-secondary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>Max</button>
+                        </div>
+                        <button id="depositButton" class="mt-4 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>Deposit GCATnew</button>
+                        <button id="withdrawButton" class="mt-2 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>Withdraw All GCATnew</button>
+                    </div>
+                    <button id="claimButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>Claim GCATnew</button>
+                    <div class="mt-4">
+                        <label class="block text-left text-light-gray mb-2">Query Address</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="queryAddress" placeholder="Enter address to query" class="flex-1 px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                            <button id="queryButton" class="px-4 py-2 bg-secondary text-dark rounded-lg font-medium hover:bg-secondary/80 transition-all">Query</button>
+                        </div>
+                        <div class="bg-dark/80 p-3 rounded-lg border border-primary/20 mt-2">
+                            <p id="queryStatus" class="text-light-gray text-sm">Query Result: Enter an address to check</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <img src="https://www.woofswap.finance/image/tokens/gcat.png" alt="GCAT Logo" class="w-16 h-16 mx-auto animate-float">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark/95 py-12 border-t border-primary/20">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-light-gray text-sm">© 2025 GCAT Airdrop. All rights reserved. DYOR and invest responsibly.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        const GCAT_ADDRESS = '0x02ead2A455674073f223B4E5002ECdd6AAB77AD8';
+        const GCATNEW_ADDRESS = '0x01ec580a60dbf3C8f3E00805C5489037efF35675';
+        const CONTRACT_ADDRESS = '0x823715e38b575D7152E86Dd6DaC7c55099014b01';
+        const MAX_APPROVAL = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+
+        const erc20Abi = [
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+            {"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        const contractAbi = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"GcatNewDeposited","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"GcatNewWithdrawn","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"GcatNewClaimed","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"addressToClaimedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"claimGcatNew","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"checkHasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"depositGcatNew","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getClaimableGcatNew","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"hasClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"totalUsers","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"userIdToAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"withdrawAllGcatNew","outputs":[],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        const chains = {
+            GateLayer: {
+                chainId: 10088,
+                chainName: 'Gate Layer',
+                rpcUrl: 'https://gatelayer-rpc.gatenode.cc',
+                blockExplorer: 'https://www.gatescan.org/gatelayer/',
+                nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
+            }
+        };
+
+        let web3, account, gcatContract, gcatNewContract, airdropContract;
+
+        async function waitForTransaction(txHash) {
+            let receipt = null;
+            const maxAttempts = 30;
+            let attempts = 0;
+            while (attempts < maxAttempts) {
+                receipt = await web3.eth.getTransactionReceipt(txHash);
+                if (receipt) {
+                    if (receipt.status) return receipt;
+                    throw new Error(`Transaction ${txHash} failed`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
+            }
+            throw new Error(`Transaction ${txHash} not confirmed after ${maxAttempts} attempts`);
+        }
+
+        async function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function retryContractCall(fn, maxRetries = 3, delayMs = 500) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    if (attempt === maxRetries) throw error;
+                    await delay(delayMs);
+                }
+            }
+        }
+
+        async function initializeWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = (await web3.eth.getAccounts())[0];
+                    document.getElementById('connectWalletButton').innerText = `Connected: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                    await switchNetwork('GateLayer');
+                    await initializeContracts();
+                    await checkBalances();
+                    document.getElementById('networkStatus').innerText = 'Connected to Gate Layer (ID: 10088)';
+                } catch (error) {
+                    document.getElementById('networkStatus').innerText = 'Wallet connection failed: ' + (error.message || 'Unknown error');
+                }
+            } else {
+                document.getElementById('networkStatus').innerText = 'Please install MetaMask';
+            }
+        }
+
+        async function switchNetwork(chain) {
+            const chainConfig = chains[chain];
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: `0x${chainConfig.chainId.toString(16)}` }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: `0x${chainConfig.chainId.toString(16)}`,
+                            chainName: chainConfig.chainName,
+                            rpcUrls: [chainConfig.rpcUrl],
+                            nativeCurrency: chainConfig.nativeCurrency,
+                            blockExplorerUrls: [chainConfig.blockExplorer]
+                        }]
+                    });
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        async function initializeContracts() {
+            gcatContract = new web3.eth.Contract(erc20Abi, GCAT_ADDRESS);
+            gcatNewContract = new web3.eth.Contract(erc20Abi, GCATNEW_ADDRESS);
+            airdropContract = new web3.eth.Contract(contractAbi, CONTRACT_ADDRESS);
+        }
+
+        async function checkBalances() {
+            if (!web3 || !account) {
+                document.getElementById('claimButton').disabled = true;
+                document.getElementById('depositButton').disabled = true;
+                document.getElementById('withdrawButton').disabled = true;
+                document.getElementById('maxDepositButton').disabled = true;
+                document.getElementById('balanceStatus').innerHTML = 'GT Balance: 0<br>GCAT Balance: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed';
+                return;
+            }
+            try {
+                document.getElementById('networkStatus').innerText = 'Querying balances...';
+                const gtBalance = await retryContractCall(() => web3.eth.getBalance(account));
+                await delay(500);
+                const gcatBalance = await retryContractCall(() => gcatContract.methods.balanceOf(account).call());
+                await delay(500);
+                const claimableGcatNew = await retryContractCall(() => airdropContract.methods.getClaimableGcatNew(account).call());
+                await delay(500);
+                const hasClaimed = await retryContractCall(() => airdropContract.methods.checkHasClaimed(account).call());
+                await delay(500);
+                let owner = '0x0';
+                try {
+                    owner = await retryContractCall(() => airdropContract.methods.owner().call());
+                } catch (error) {
+                    owner = '0x0';
+                }
+                const gtBalanceFormatted = Number(web3.utils.fromWei(gtBalance, 'ether')).toFixed(4);
+                const gcatBalanceFormatted = Number(web3.utils.fromWei(gcatBalance, 'ether')).toFixed(4);
+                const claimableGcatNewFormatted = Number(web3.utils.fromWei(claimableGcatNew, 'ether')).toFixed(4);
+                const claimStatus = hasClaimed ? 'Claimed' : 'Not Claimed';
+                document.getElementById('balanceStatus').innerHTML = `GT Balance: ${gtBalanceFormatted}<br>GCAT Balance: ${gcatBalanceFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
+                document.getElementById('claimButton').disabled = Number(claimableGcatNewFormatted) <= 0 || hasClaimed;
+                if (account.toLowerCase() === owner.toLowerCase()) {
+                    document.getElementById('ownerSection').classList.remove('hidden');
+                    await checkOwnerButtonStatus();
+                } else {
+                    document.getElementById('ownerSection').classList.add('hidden');
+                }
+                document.getElementById('networkStatus').innerText = 'Balances updated';
+            } catch (error) {
+                let errorMessage = error.message || 'Unknown error';
+                if (errorMessage.includes('execution reverted')) {
+                    errorMessage = 'Contract query failed, please check network or contract';
+                }
+                document.getElementById('balanceStatus').innerHTML = `Query failed: ${errorMessage}`;
+                document.getElementById('claimButton').disabled = true;
+                document.getElementById('depositButton').disabled = true;
+                document.getElementById('withdrawButton').disabled = true;
+                document.getElementById('maxDepositButton').disabled = true;
+                document.getElementById('networkStatus').innerText = errorMessage;
+            }
+        }
+
+        async function queryAddress() {
+            const queryAddressInput = document.getElementById('queryAddress');
+            const queryStatus = document.getElementById('queryStatus');
+            const address = queryAddressInput.value.trim();
+            if (!web3 || !web3.utils.isAddress(address)) {
+                queryStatus.innerText = 'Please enter a valid Ethereum address';
+                return;
+            }
+            try {
+                queryStatus.innerText = 'Querying address...';
+                const gcatBalance = await retryContractCall(() => gcatContract.methods.balanceOf(address).call());
+                const claimableGcatNew = await retryContractCall(() => airdropContract.methods.getClaimableGcatNew(address).call());
+                const hasClaimed = await retryContractCall(() => airdropContract.methods.checkHasClaimed(address).call());
+                const gcatBalanceFormatted = Number(web3.utils.fromWei(gcatBalance, 'ether')).toFixed(4);
+                const claimableGcatNewFormatted = Number(web3.utils.fromWei(claimableGcatNew, 'ether')).toFixed(4);
+                const claimStatus = hasClaimed ? 'Claimed' : 'Not Claimed';
+                queryStatus.innerHTML = `Address: ${address.slice(0, 6)}...${address.slice(-4)}<br>GCAT Balance: ${gcatBalanceFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
+            } catch (error) {
+                let errorMessage = error.message || 'Unknown error';
+                if (errorMessage.includes('execution reverted')) {
+                    errorMessage = 'Query failed, please check network or contract';
+                }
+                queryStatus.innerText = `Query failed: ${errorMessage}`;
+            }
+        }
+
+        async function approveToken(amountWei) {
+            const status = document.getElementById('networkStatus');
+            try {
+                status.innerText = 'Approving GCATnew...';
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await gcatNewContract.methods.approve(CONTRACT_ADDRESS, amountWei).estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    status.innerText = 'Insufficient GT for gas fees';
+                    return false;
+                }
+                const tx = await gcatNewContract.methods.approve(CONTRACT_ADDRESS, amountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 1000000))
+                });
+                await waitForTransaction(tx.transactionHash);
+                status.innerText = 'GCATnew approval successful!';
+                return true;
+            } catch (error) {
+                status.innerText = error.code === 4001 ? 'User cancelled approval' : `Approval failed: ${error.message}`;
+                return false;
+            }
+        }
+
+        async function depositGcatNew() {
+            const status = document.getElementById('networkStatus');
+            const depositButton = document.getElementById('depositButton');
+            const depositAmount = document.getElementById('depositAmount').value.trim();
+            if (!web3 || !account) {
+                status.innerText = 'Please connect wallet';
+                return;
+            }
+            if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) {
+                status.innerText = 'Enter a valid deposit amount';
+                return;
+            }
+            try {
+                depositButton.disabled = true;
+                depositButton.innerHTML = 'Depositing... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = 'Checking balance and gas...';
+                const depositAmountWei = web3.utils.toWei(depositAmount, 'ether');
+                const gcatNewBalance = await gcatNewContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(gcatNewBalance).lt(web3.utils.toBN(depositAmountWei))) {
+                    status.innerText = 'Insufficient GCATnew balance';
+                    return;
+                }
+                const allowance = await gcatNewContract.methods.allowance(account, CONTRACT_ADDRESS).call();
+                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(depositAmountWei))) {
+                    const approved = await approveToken(depositAmountWei);
+                    if (!approved) return;
+                }
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await airdropContract.methods.depositGcatNew(depositAmountWei).estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    status.innerText = 'Insufficient GT for gas fees';
+                    return;
+                }
+                const tx = await airdropContract.methods.depositGcatNew(depositAmountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000))
+                });
+                await waitForTransaction(tx.transactionHash);
+                status.innerText = 'Deposited GCATnew successfully!';
+                document.getElementById('depositAmount').value = '';
+                await checkBalances();
+            } catch (error) {
+                status.innerText = error.code === 4001 ? 'User cancelled transaction' : `Deposit failed: ${error.message}`;
+            } finally {
+                depositButton.disabled = false;
+                depositButton.innerHTML = 'Deposit GCATnew';
+            }
+        }
+
+        async function withdrawAllGcatNew() {
+            const status = document.getElementById('networkStatus');
+            const withdrawButton = document.getElementById('withdrawButton');
+            if (!web3 || !account) {
+                status.innerText = 'Please connect wallet';
+                return;
+            }
+            try {
+                withdrawButton.disabled = true;
+                withdrawButton.innerHTML = 'Withdrawing... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = 'Checking gas...';
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await airdropContract.methods.withdrawAllGcatNew().estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    status.innerText = 'Insufficient GT for gas fees';
+                    return;
+                }
+                const tx = await airdropContract.methods.withdrawAllGcatNew().send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000))
+                });
+                await waitForTransaction(tx.transactionHash);
+                status.innerText = 'Withdrew all GCATnew successfully!';
+                await checkBalances();
+            } catch (error) {
+                status.innerText = error.code === 4001 ? 'User cancelled transaction' : `Withdrawal failed: ${error.message}`;
+            } finally {
+                withdrawButton.disabled = false;
+                withdrawButton.innerHTML = 'Withdraw All GCATnew';
+            }
+        }
+
+        async function claimGcatNew() {
+            const status = document.getElementById('networkStatus');
+            const claimButton = document.getElementById('claimButton');
+            if (!web3 || !account) {
+                status.innerText = 'Please connect wallet';
+                return;
+            }
+            try {
+                claimButton.disabled = true;
+                claimButton.innerHTML = 'Claiming... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = 'Checking claimable amount and gas...';
+                const claimableGcatNew = await airdropContract.methods.getClaimableGcatNew(account).call();
+                if (web3.utils.toBN(claimableGcatNew).lte(web3.utils.toBN(0))) {
+                    status.innerText = 'No claimable GCATnew available';
+                    return;
+                }
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await airdropContract.methods.claimGcatNew().estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    status.innerText = 'Insufficient GT for gas fees';
+                    return;
+                }
+                const tx = await airdropContract.methods.claimGcatNew().send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000))
+                });
+                await waitForTransaction(tx.transactionHash);
+                status.innerText = 'Claimed GCATnew successfully!';
+                await checkBalances();
+            } catch (error) {
+                status.innerText = error.code === 4001 ? 'User cancelled transaction' : `Claim failed: ${error.message}`;
+            } finally {
+                claimButton.disabled = false;
+                claimButton.innerHTML = 'Claim GCATnew';
+            }
+        }
+
+        async function checkOwnerButtonStatus() {
+            if (!web3 || !account) {
+                document.getElementById('depositButton').disabled = true;
+                document.getElementById('maxDepositButton').disabled = true;
+                document.getElementById('withdrawButton').disabled = true;
+                return;
+            }
+            const depositAmount = document.getElementById('depositAmount').value.trim();
+            const gcatNewBalance = await retryContractCall(() => gcatNewContract.methods.balanceOf(account).call());
+            const gcatNewBalanceFormatted = Number(web3.utils.fromWei(gcatNewBalance, 'ether')).toFixed(4);
+            const contractGcatNewBalance = await retryContractCall(() => gcatNewContract.methods.balanceOf(CONTRACT_ADDRESS).call());
+            const contractGcatNewBalanceFormatted = Number(web3.utils.fromWei(contractGcatNewBalance, 'ether')).toFixed(4);
+            const isDepositValid = depositAmount && !isNaN(depositAmount) && Number(depositAmount) > 0 && Number(depositAmount) <= Number(gcatNewBalanceFormatted);
+            document.getElementById('depositButton').disabled = !isDepositValid;
+            document.getElementById('maxDepositButton').dataset.maxAmount = gcatNewBalanceFormatted;
+            document.getElementById('maxDepositButton').disabled = Number(gcatNewBalanceFormatted) <= 0;
+            document.getElementById('withdrawButton').disabled = Number(contractGcatNewBalanceFormatted) <= 0;
+        }
+
+        function copyContract() {
+            navigator.clipboard.writeText(CONTRACT_ADDRESS).then(() => {
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                notification.textContent = 'Contract address copied!';
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('connectWalletButton').addEventListener('click', initializeWeb3);
+            document.getElementById('claimButton').addEventListener('click', claimGcatNew);
+            document.getElementById('depositButton').addEventListener('click', depositGcatNew);
+            document.getElementById('withdrawButton').addEventListener('click', withdrawAllGcatNew);
+            document.getElementById('maxDepositButton').addEventListener('click', () => {
+                const maxButton = document.getElementById('maxDepositButton');
+                if (maxButton.dataset.maxAmount && Number(maxButton.dataset.maxAmount) > 0) {
+                    document.getElementById('depositAmount').value = Math.floor(Number(maxButton.dataset.maxAmount));
+                    checkOwnerButtonStatus();
+                }
+            });
+            document.getElementById('depositAmount').addEventListener('input', checkOwnerButtonStatus);
+            document.getElementById('queryButton').addEventListener('click', queryAddress);
+
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuToggle.innerHTML = mobileMenu.classList.contains('hidden')
+                    ? '<i class="fa fa-bars"></i>'
+                    : '<i class="fa fa-times"></i>';
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.add('hidden');
+                    menuToggle.innerHTML = '<i class="fa fa-bars"></i>';
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-dark/95', 'shadow-lg');
+                } else {
+                    navbar.classList.remove('bg-dark/95', 'shadow-lg');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
