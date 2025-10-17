@@ -95,7 +95,7 @@
                         </button>
                     </div>
                     <div class="bg-dark/80 p-3 rounded-lg border border-primary/20">
-                        <p id="balanceStatus" class="text-light-gray text-sm">GT Balance: 0<br>GCAT Balance: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed</p>
+                        <p id="balanceStatus" class="text-light-gray text-sm">GT Balance: 0<br>Locked GCAT: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed</p>
                     </div>
                     <div id="ownerSection" class="hidden">
                         <label class="block text-left text-light-gray mb-2">Deposit GCATnew Amount</label>
@@ -135,7 +135,7 @@
     <script>
         const GCAT_ADDRESS = '0x02ead2A455674073f223B4E5002ECdd6AAB77AD8';
         const GCATNEW_ADDRESS = '0x01ec580a60dbf3C8f3E00805C5489037efF35675';
-        const CONTRACT_ADDRESS = '0x823715e38b575D7152E86Dd6DaC7c55099014b01';
+        const CONTRACT_ADDRESS = '0xF47e1270ba6AD43cef6c606476cea19D04d7672f';
         const MAX_APPROVAL = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
         const erc20Abi = [
@@ -144,6 +144,10 @@
             {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
             {"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
             {"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+        ];
+
+        const gcatContractAbi = [
+            {"constant":true,"inputs":[{"name":"user","type":"address"}],"name":"gcatDeposits","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
         ];
 
         const contractAbi = [
@@ -254,7 +258,7 @@
         }
 
         async function initializeContracts() {
-            gcatContract = new web3.eth.Contract(erc20Abi, GCAT_ADDRESS);
+            gcatContract = new web3.eth.Contract(gcatContractAbi, GCAT_ADDRESS);
             gcatNewContract = new web3.eth.Contract(erc20Abi, GCATNEW_ADDRESS);
             airdropContract = new web3.eth.Contract(contractAbi, CONTRACT_ADDRESS);
         }
@@ -265,14 +269,14 @@
                 document.getElementById('depositButton').disabled = true;
                 document.getElementById('withdrawButton').disabled = true;
                 document.getElementById('maxDepositButton').disabled = true;
-                document.getElementById('balanceStatus').innerHTML = 'GT Balance: 0<br>GCAT Balance: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed';
+                document.getElementById('balanceStatus').innerHTML = 'GT Balance: 0<br>Locked GCAT: 0<br>Claimable GCATnew: 0<br>Claim Status: Not Claimed';
                 return;
             }
             try {
                 document.getElementById('networkStatus').innerText = 'Querying balances...';
                 const gtBalance = await retryContractCall(() => web3.eth.getBalance(account));
                 await delay(500);
-                const gcatBalance = await retryContractCall(() => gcatContract.methods.balanceOf(account).call());
+                const lockedGcat = await retryContractCall(() => gcatContract.methods.gcatDeposits(account).call());
                 await delay(500);
                 const claimableGcatNew = await retryContractCall(() => airdropContract.methods.getClaimableGcatNew(account).call());
                 await delay(500);
@@ -285,10 +289,10 @@
                     owner = '0x0';
                 }
                 const gtBalanceFormatted = Number(web3.utils.fromWei(gtBalance, 'ether')).toFixed(4);
-                const gcatBalanceFormatted = Number(web3.utils.fromWei(gcatBalance, 'ether')).toFixed(4);
+                const lockedGcatFormatted = Number(web3.utils.fromWei(lockedGcat, 'ether')).toFixed(4);
                 const claimableGcatNewFormatted = Number(web3.utils.fromWei(claimableGcatNew, 'ether')).toFixed(4);
                 const claimStatus = hasClaimed ? 'Claimed' : 'Not Claimed';
-                document.getElementById('balanceStatus').innerHTML = `GT Balance: ${gtBalanceFormatted}<br>GCAT Balance: ${gcatBalanceFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
+                document.getElementById('balanceStatus').innerHTML = `GT Balance: ${gtBalanceFormatted}<br>Locked GCAT: ${lockedGcatFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
                 document.getElementById('claimButton').disabled = Number(claimableGcatNewFormatted) <= 0 || hasClaimed;
                 if (account.toLowerCase() === owner.toLowerCase()) {
                     document.getElementById('ownerSection').classList.remove('hidden');
@@ -321,13 +325,13 @@
             }
             try {
                 queryStatus.innerText = 'Querying address...';
-                const gcatBalance = await retryContractCall(() => gcatContract.methods.balanceOf(address).call());
+                const lockedGcat = await retryContractCall(() => gcatContract.methods.gcatDeposits(address).call());
                 const claimableGcatNew = await retryContractCall(() => airdropContract.methods.getClaimableGcatNew(address).call());
                 const hasClaimed = await retryContractCall(() => airdropContract.methods.checkHasClaimed(address).call());
-                const gcatBalanceFormatted = Number(web3.utils.fromWei(gcatBalance, 'ether')).toFixed(4);
+                const lockedGcatFormatted = Number(web3.utils.fromWei(lockedGcat, 'ether')).toFixed(4);
                 const claimableGcatNewFormatted = Number(web3.utils.fromWei(claimableGcatNew, 'ether')).toFixed(4);
                 const claimStatus = hasClaimed ? 'Claimed' : 'Not Claimed';
-                queryStatus.innerHTML = `Address: ${address.slice(0, 6)}...${address.slice(-4)}<br>GCAT Balance: ${gcatBalanceFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
+                queryStatus.innerHTML = `Address: ${address.slice(0, 6)}...${address.slice(-4)}<br>Locked GCAT: ${lockedGcatFormatted}<br>Claimable GCATnew: ${claimableGcatNewFormatted}<br>Claim Status: ${claimStatus}`;
             } catch (error) {
                 let errorMessage = error.message || 'Unknown error';
                 if (errorMessage.includes('execution reverted')) {
